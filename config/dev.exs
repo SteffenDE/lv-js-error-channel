@@ -25,7 +25,7 @@ config :js_error_channel, JsErrorChannelWeb.Endpoint,
   debug_errors: true,
   secret_key_base: "yUcg5hRxPqnr/qOzWaj2ZDZCihZMsWB9h+uZBzmAFxHg2S9LALr771bTsRaA1Sg0",
   watchers: [
-    esbuild: {Esbuild, :install_and_run, [:js_error_channel, ~w(--sourcemap=inline --watch)]},
+    esbuild: {Esbuild, :install_and_run, [:js_error_channel, ~w(--sourcemap --watch)]},
     tailwind: {Tailwind, :install_and_run, [:js_error_channel, ~w(--watch)]}
   ]
 

@@ -28,6 +28,25 @@ let liveSocket = new LiveSocket("/live", Socket, {
   params: {_csrf_token: csrfToken}
 })
 
+let errorChannel = liveSocket.socket.channel("js-error", {})
+errorChannel.join()
+  .receive("ok", () => console.log("joined channel"))
+  .receive("error", () => console.log("failed to join channel"));
+window.addEventListener("error", e => {
+  e.preventDefault()
+  let stacktrace = []
+  let uri = `${window.location.protocol}//${window.location.host}/`
+  e.error.stack.trim().split("\n").forEach(line => {
+    if(line.match(/@|at/) == null){return}
+    line = line.split(/@|\s/).filter(el => !["at"].includes(el)).filter((value, index, self) => {return self.indexOf(value) === index})
+    if(line.length == 3){line = line.filter(el => el != "")}
+    let k = line[0] == "" ? null : line[0]
+    let loc = line[1].replace("(", "").replace(")", "").replace(uri, "").split(":")
+    stacktrace.push([k, {file: uri+loc[0], line: parseInt(loc[1]), col: parseInt(loc[2])}])
+  })
+  errorChannel.push("js-error", {measurement: {duration: Math.round(e.timeStamp)}, metadata: {message: e.error.message, type: e.type, stacktrace: stacktrace}})
+});
+
 // Show progress bar on live navigation and form submits
 topbar.config({barColors: {0: "#29d"}, shadowColor: "rgba(0, 0, 0, .3)"})
 window.addEventListener("phx:page-loading-start", _info => topbar.show(300))
@@ -35,6 +54,8 @@ window.addEventListener("phx:page-loading-stop", _info => topbar.hide())
 
 // connect if there are any LiveViews on the page
 liveSocket.connect()
+// connect errorChannel manually if no LiveViews on the page
+errorChannel.socket.connect()
 
 // expose liveSocket on window for web console debug logs and latency simulation:
 // >> liveSocket.enableDebug()
@@ -42,3 +63,5 @@ liveSocket.connect()
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket
 
+
+foo()
